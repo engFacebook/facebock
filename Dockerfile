@@ -1,21 +1,24 @@
-# Use official Node.js runtime
-FROM node:18-alpine
+# Use official Python runtime
+FROM python:3.11-slim
 
 # Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY backend/package*.json ./
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install dependencies
-RUN npm ci --only=production
+# Copy requirements and install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY backend/ .
 COPY frontend/ ./frontend/
 
 # Expose port
-EXPOSE 3000
+EXPOSE 5000
 
-# Start the application
-CMD ["node", "server.js"]
+# Run the application
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
