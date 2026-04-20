@@ -1,0 +1,232 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تطبيق Redis + Railway</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Tahoma', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .counter-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        .counter-number {
+            font-size: 72px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            margin: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .reset-btn {
+            background: #dc3545;
+        }
+        .store-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 تطبيق Redis على Railway</h1>
+        <p>عداد الزيارات + تخزين بيانات</p>
+        
+        <div class="counter-box">
+            <h3>عدد الزيارات</h3>
+            <div class="counter-number" id="counter">0</div>
+            <button onclick="incrementCounter()">➕ زيادة</button>
+            <button class="reset-btn" onclick="resetCounter()">🔄 إعادة تعيين</button>
+        </div>
+
+        <div class="store-section">
+            <h3>💾 تخزين بيانات في Redis</h3>
+            <input type="text" id="keyInput" placeholder="المفتاح (key)">
+            <textarea id="valueInput" rows="3" placeholder="القيمة (value)"></textarea>
+            <button onclick="storeData()">حفظ البيانات</button>
+            
+            <input type="text" id="getKeyInput" placeholder="أدخل المفتاح للبحث">
+            <button onclick="getData()">استرجاع البيانات</button>
+            
+            <div id="status"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.origin;
+        
+        async function loadCounter() {
+            try {
+                const response = await fetch(`${API_URL}/api/counter`);
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('counter').textContent = data.count;
+                }
+            } catch (error) {
+                showStatus('خطأ في تحميل العداد: ' + error.message, 'error');
+            }
+        }
+        
+        async function incrementCounter() {
+            try {
+                const response = await fetch(`${API_URL}/api/increment`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('counter').textContent = data.count;
+                    showStatus('✅ تم زيادة العداد!', 'success');
+                }
+            } catch (error) {
+                showStatus('خطأ: ' + error.message, 'error');
+            }
+        }
+        
+        async function resetCounter() {
+            try {
+                const response = await fetch(`${API_URL}/api/reset`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('counter').textContent = data.count;
+                    showStatus('🔄 تم إعادة تعيين العداد', 'success');
+                }
+            } catch (error) {
+                showStatus('خطأ: ' + error.message, 'error');
+            }
+        }
+        
+        async function storeData() {
+            const key = document.getElementById('keyInput').value;
+            const value = document.getElementById('valueInput').value;
+            
+            if (!key || !value) {
+                showStatus('❌ الرجاء إدخال المفتاح والقيمة', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/api/store`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key, value })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showStatus(`✅ تم حفظ البيانات تحت المفتاح: ${key}`, 'success');
+                    document.getElementById('keyInput').value = '';
+                    document.getElementById('valueInput').value = '';
+                }
+            } catch (error) {
+                showStatus('خطأ: ' + error.message, 'error');
+            }
+        }
+        
+        async function getData() {
+            const key = document.getElementById('getKeyInput').value;
+            if (!key) {
+                showStatus('❌ الرجاء إدخال المفتاح', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/api/get/${key}`);
+                const data = await response.json();
+                if (data.success && data.value) {
+                    showStatus(`📦 القيمة للمفتاح "${key}": ${data.value}`, 'success');
+                } else {
+                    showStatus(`❌ لا توجد بيانات للمفتاح: ${key}`, 'error');
+                }
+            } catch (error) {
+                showStatus('خطأ: ' + error.message, 'error');
+            }
+        }
+        
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+                setTimeout(() => {
+                    statusDiv.style.display = 'block';
+                    statusDiv.className = 'status';
+                }, 2000);
+            }, 3000);
+        }
+        
+        // تحميل العداد عند فتح الصفحة
+        loadCounter();
+        // تحديث العداد كل 5 ثواني
+        setInterval(loadCounter, 5000);
+    </script>
+</body>
+</html>
