@@ -1,121 +1,222 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تطبيق Redis + Railway</title>
+    <title>تطبيق Python + Redis على Railway</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+        
         body {
             font-family: 'Tahoma', Arial, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             padding: 20px;
         }
+        
         .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .card {
             background: white;
             border-radius: 20px;
-            padding: 40px;
+            padding: 30px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            max-width: 500px;
-            width: 100%;
-            text-align: center;
         }
+        
+        .full-width {
+            grid-column: span 2;
+        }
+        
         h1 {
             color: #333;
             margin-bottom: 10px;
+            text-align: center;
         }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
         .counter-box {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 40px;
+            padding: 30px;
             border-radius: 15px;
-            margin: 20px 0;
+            text-align: center;
         }
+        
         .counter-number {
             font-size: 72px;
             font-weight: bold;
             margin: 20px 0;
         }
+        
         button {
             background: #667eea;
             color: white;
             border: none;
-            padding: 12px 30px;
+            padding: 12px 25px;
             margin: 10px;
             border-radius: 8px;
             cursor: pointer;
             font-size: 16px;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.3s ease;
         }
+        
         button:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
+        
         button:active {
             transform: translateY(0);
         }
+        
         .reset-btn {
             background: #dc3545;
         }
-        .store-section {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 2px solid #eee;
+        
+        .delete-btn {
+            background: #ff6b6b;
         }
+        
+        .store-section, .retrieve-section {
+            margin-top: 20px;
+        }
+        
         input, textarea {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             margin: 10px 0;
-            border: 1px solid #ddd;
+            border: 2px solid #e0e0e0;
             border-radius: 8px;
             font-size: 14px;
+            transition: border-color 0.3s ease;
         }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
         .status {
             margin-top: 15px;
-            padding: 10px;
+            padding: 12px;
             border-radius: 8px;
             font-size: 14px;
+            animation: slideIn 0.3s ease;
         }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
         .success {
             background: #d4edda;
             color: #155724;
+            border: 1px solid #c3e6cb;
         }
+        
         .error {
             background: #f8d7da;
             color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .data-item {
+            background: #f8f9fa;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .data-key {
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .data-value {
+            color: #333;
+            word-break: break-all;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            .full-width {
+                grid-column: span 1;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🚀 تطبيق Redis على Railway</h1>
-        <p>عداد الزيارات + تخزين بيانات</p>
-        
-        <div class="counter-box">
-            <h3>عدد الزيارات</h3>
-            <div class="counter-number" id="counter">0</div>
-            <button onclick="incrementCounter()">➕ زيادة</button>
-            <button class="reset-btn" onclick="resetCounter()">🔄 إعادة تعيين</button>
+        <div class="card full-width">
+            <h1>🐍 Python + Redis 🚀</h1>
+            <p class="subtitle">تطبيق يعمل على Railway مع Flask و Redis</p>
         </div>
-
-        <div class="store-section">
-            <h3>💾 تخزين بيانات في Redis</h3>
-            <input type="text" id="keyInput" placeholder="المفتاح (key)">
-            <textarea id="valueInput" rows="3" placeholder="القيمة (value)"></textarea>
-            <button onclick="storeData()">حفظ البيانات</button>
+        
+        <div class="card">
+            <h2>📊 عداد الزيارات</h2>
+            <div class="counter-box">
+                <h3>عدد الزيارات الحالي</h3>
+                <div class="counter-number" id="counter">0</div>
+                <button onclick="incrementCounter()">➕ زيادة</button>
+                <button class="reset-btn" onclick="resetCounter()">🔄 إعادة تعيين</button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>💾 تخزين بيانات في Redis</h2>
+            <div class="store-section">
+                <input type="text" id="keyInput" placeholder="المفتاح (Key)">
+                <textarea id="valueInput" rows="3" placeholder="القيمة (Value)"></textarea>
+                <button onclick="storeData()">💾 حفظ البيانات</button>
+            </div>
             
-            <input type="text" id="getKeyInput" placeholder="أدخل المفتاح للبحث">
-            <button onclick="getData()">استرجاع البيانات</button>
+            <div class="retrieve-section">
+                <h3>🔍 استرجاع بيانات</h3>
+                <input type="text" id="getKeyInput" placeholder="أدخل المفتاح للبحث">
+                <button onclick="getData()">🔍 بحث</button>
+                <button onclick="deleteData()" class="delete-btn">🗑️ حذف</button>
+            </div>
             
             <div id="status"></div>
+        </div>
+        
+        <div class="card full-width">
+            <h2>📋 جميع البيانات المخزنة</h2>
+            <button onclick="getAllKeys()">🔄 تحديث</button>
+            <div id="allData"></div>
         </div>
     </div>
 
@@ -142,7 +243,8 @@
                 const data = await response.json();
                 if (data.success) {
                     document.getElementById('counter').textContent = data.count;
-                    showStatus('✅ تم زيادة العداد!', 'success');
+                    showStatus('✅ تم زيادة العداد! العدد الحالي: ' + data.count, 'success');
+                    await getAllKeys();
                 }
             } catch (error) {
                 showStatus('خطأ: ' + error.message, 'error');
@@ -150,23 +252,25 @@
         }
         
         async function resetCounter() {
-            try {
-                const response = await fetch(`${API_URL}/api/reset`, {
-                    method: 'POST'
-                });
-                const data = await response.json();
-                if (data.success) {
-                    document.getElementById('counter').textContent = data.count;
-                    showStatus('🔄 تم إعادة تعيين العداد', 'success');
+            if (confirm('هل أنت متأكد من إعادة تعيين العداد؟')) {
+                try {
+                    const response = await fetch(`${API_URL}/api/reset`, {
+                        method: 'POST'
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        document.getElementById('counter').textContent = data.count;
+                        showStatus('🔄 تم إعادة تعيين العداد', 'success');
+                    }
+                } catch (error) {
+                    showStatus('خطأ: ' + error.message, 'error');
                 }
-            } catch (error) {
-                showStatus('خطأ: ' + error.message, 'error');
             }
         }
         
         async function storeData() {
-            const key = document.getElementById('keyInput').value;
-            const value = document.getElementById('valueInput').value;
+            const key = document.getElementById('keyInput').value.trim();
+            const value = document.getElementById('valueInput').value.trim();
             
             if (!key || !value) {
                 showStatus('❌ الرجاء إدخال المفتاح والقيمة', 'error');
@@ -184,6 +288,9 @@
                     showStatus(`✅ تم حفظ البيانات تحت المفتاح: ${key}`, 'success');
                     document.getElementById('keyInput').value = '';
                     document.getElementById('valueInput').value = '';
+                    await getAllKeys();
+                } else {
+                    showStatus('❌ فشل الحفظ: ' + data.error, 'error');
                 }
             } catch (error) {
                 showStatus('خطأ: ' + error.message, 'error');
@@ -191,23 +298,113 @@
         }
         
         async function getData() {
-            const key = document.getElementById('getKeyInput').value;
+            const key = document.getElementById('getKeyInput').value.trim();
             if (!key) {
                 showStatus('❌ الرجاء إدخال المفتاح', 'error');
                 return;
             }
             
             try {
-                const response = await fetch(`${API_URL}/api/get/${key}`);
+                const response = await fetch(`${API_URL}/api/get/${encodeURIComponent(key)}`);
                 const data = await response.json();
-                if (data.success && data.value) {
-                    showStatus(`📦 القيمة للمفتاح "${key}": ${data.value}`, 'success');
+                if (data.success) {
+                    showStatus(`📦 القيمة للمفتاح "${data.key}": ${data.value}`, 'success');
                 } else {
-                    showStatus(`❌ لا توجد بيانات للمفتاح: ${key}`, 'error');
+                    showStatus(`❌ ${data.error}`, 'error');
                 }
             } catch (error) {
                 showStatus('خطأ: ' + error.message, 'error');
             }
+        }
+        
+        async function deleteData() {
+            const key = document.getElementById('getKeyInput').value.trim();
+            if (!key) {
+                showStatus('❌ الرجاء إدخال المفتاح للحذف', 'error');
+                return;
+            }
+            
+            if (confirm(`هل أنت متأكد من حذف المفتاح: ${key}؟`)) {
+                try {
+                    const response = await fetch(`${API_URL}/api/delete/${encodeURIComponent(key)}`, {
+                        method: 'DELETE'
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        showStatus(`🗑️ ${data.message}`, 'success');
+                        document.getElementById('getKeyInput').value = '';
+                        await getAllKeys();
+                    } else {
+                        showStatus(`❌ ${data.error}`, 'error');
+                    }
+                } catch (error) {
+                    showStatus('خطأ: ' + error.message, 'error');
+                }
+            }
+        }
+        
+        async function getAllKeys() {
+            try {
+                const response = await fetch(`${API_URL}/api/keys`);
+                const data = await response.json();
+                if (data.success && data.keys.length > 0) {
+                    const keys = data.keys.filter(k => k !== 'visitor_count');
+                    if (keys.length === 0) {
+                        document.getElementById('allData').innerHTML = '<p class="info">📭 لا توجد بيانات مخزنة</p>';
+                        return;
+                    }
+                    
+                    let html = '';
+                    for (const key of keys) {
+                        const valueResponse = await fetch(`${API_URL}/api/get/${encodeURIComponent(key)}`);
+                        const valueData = await valueResponse.json();
+                        if (valueData.success) {
+                            html += `
+                                <div class="data-item">
+                                    <div>
+                                        <span class="data-key">${escapeHtml(key)}:</span>
+                                        <span class="data-value">${escapeHtml(valueData.value)}</span>
+                                    </div>
+                                    <button onclick="deleteSpecificKey('${escapeHtml(key)}')" class="delete-btn" style="padding: 5px 10px; font-size: 12px;">حذف</button>
+                                </div>
+                            `;
+                        }
+                    }
+                    document.getElementById('allData').innerHTML = html;
+                } else {
+                    document.getElementById('allData').innerHTML = '<p class="info">📭 لا توجد بيانات مخزنة</p>';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('allData').innerHTML = '<p class="error">خطأ في تحميل البيانات</p>';
+            }
+        }
+        
+        async function deleteSpecificKey(key) {
+            if (confirm(`هل أنت متأكد من حذف المفتاح: ${key}؟`)) {
+                try {
+                    const response = await fetch(`${API_URL}/api/delete/${encodeURIComponent(key)}`, {
+                        method: 'DELETE'
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        showStatus(`🗑️ تم حذف المفتاح: ${key}`, 'success');
+                        await getAllKeys();
+                    }
+                } catch (error) {
+                    showStatus('خطأ: ' + error.message, 'error');
+                }
+            }
+        }
+        
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
         }
         
         function showStatus(message, type) {
@@ -215,18 +412,26 @@
             statusDiv.textContent = message;
             statusDiv.className = `status ${type}`;
             setTimeout(() => {
-                statusDiv.style.display = 'none';
+                statusDiv.style.opacity = '0';
                 setTimeout(() => {
-                    statusDiv.style.display = 'block';
-                    statusDiv.className = 'status';
-                }, 2000);
-            }, 3000);
+                    statusDiv.style.display = 'none';
+                    statusDiv.style.opacity = '1';
+                    setTimeout(() => {
+                        statusDiv.style.display = 'block';
+                        statusDiv.className = 'status';
+                        statusDiv.textContent = '';
+                    }, 300);
+                }, 200);
+            }, 4000);
         }
         
-        // تحميل العداد عند فتح الصفحة
+        // تحميل البيانات عند فتح الصفحة
         loadCounter();
+        getAllKeys();
+        
         // تحديث العداد كل 5 ثواني
         setInterval(loadCounter, 5000);
+        setInterval(getAllKeys, 10000);
     </script>
 </body>
 </html>
