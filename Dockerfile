@@ -13,10 +13,12 @@ COPY frontend/ ./frontend/
 # متغيرات البيئة
 ENV PYTHONUNBUFFERED=1
 ENV PORT=5000
+ENV ENVIRONMENT=production
 
 # فتح المنفذ
 EXPOSE 5000
 
-# تشغيل التطبيق
 WORKDIR /app/backend
+
+# تشغيل التطبيق
 CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
